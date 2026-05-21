@@ -646,3 +646,261 @@ html, body, #root {
 .memo-pane-editor::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
 .memo-pane-editor img { max-width: 100%; height: auto; border-radius: 4px; display: block; margin: 4px 0; }
 
+/* ── Kanban Board ─────────────────────────────────────────── */
+
+.kanban-board {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.kanban-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.kanban-section-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  user-select: none;
+}
+
+.kanban-section-header:hover {
+  background: rgba(128, 128, 128, 0.1);
+}
+
+.kanban-section-chevron {
+  font-size: 10px;
+  color: var(--text-muted, #888);
+  width: 12px;
+  flex-shrink: 0;
+}
+
+.kanban-section-name {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #888);
+  text-transform: uppercase;
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.kanban-section-name:focus {
+  cursor: text;
+  color: var(--text-primary, #e0e0e0);
+  background: rgba(128, 128, 128, 0.1);
+  border-radius: 2px;
+  padding: 0 3px;
+}
+
+.kanban-section-badge {
+  font-size: 10px;
+  color: var(--text-muted, #888);
+  background: rgba(128, 128, 128, 0.15);
+  border-radius: 8px;
+  padding: 0 5px;
+  line-height: 16px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.kanban-section-add-task {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.kanban-section-header:hover .kanban-section-add-task {
+  opacity: 1;
+}
+
+.kanban-section-add-task:hover {
+  color: var(--text-primary, #e0e0e0);
+  background: rgba(128, 128, 128, 0.15);
+}
+
+.kanban-section-body {
+  display: flex;
+  flex-direction: column;
+  padding-left: 16px;
+  padding-bottom: 4px;
+}
+
+/* ── Task Row ─────────────────────────────────────────────── */
+
+.kanban-task {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 4px;
+  border-radius: 4px;
+  min-height: 26px;
+}
+
+.kanban-task:hover {
+  background: rgba(128, 128, 128, 0.08);
+}
+
+.kanban-task-status {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text-muted, #888);
+  transition: color 0.1s;
+  margin-top: 1px;
+}
+
+.kanban-task-status.task-status-todo {
+  color: var(--text-muted, #888);
+}
+
+.kanban-task-status.task-status-in-progress {
+  color: #4a9eff;
+}
+
+.kanban-task-status.task-status-done {
+  color: #4caf50;
+}
+
+.kanban-task-status:hover {
+  opacity: 0.7;
+}
+
+.kanban-task-title {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary, #e0e0e0);
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
+  font-family: inherit;
+  line-height: 1.4;
+  cursor: text;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.kanban-task-title:focus {
+  background: rgba(128, 128, 128, 0.1);
+  border-radius: 2px;
+  padding: 0 3px;
+}
+
+.kanban-task-due {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.kanban-task-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: 3px;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity 0.1s;
+}
+
+.kanban-task:hover .kanban-task-delete {
+  opacity: 1;
+}
+
+.kanban-task-delete:hover {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.kanban-task.kanban-task-done .kanban-task-title {
+  text-decoration: line-through;
+  opacity: 0.4;
+}
+
+.kanban-task.kanban-task-done .kanban-task-due {
+  opacity: 0.4;
+}
+
+/* ── Add task / Add section ───────────────────────────────── */
+
+.kanban-add-task-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  color: var(--text-muted, #888);
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.kanban-section-body:hover .kanban-add-task-row,
+.kanban-section-body:focus-within .kanban-add-task-row {
+  opacity: 1;
+}
+
+.kanban-add-task-row:hover {
+  background: rgba(128, 128, 128, 0.08);
+  color: var(--text-primary, #e0e0e0);
+}
+
+.kanban-add-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  color: var(--text-muted, #888);
+  font-size: 12px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  width: 100%;
+  text-align: left;
+  margin-top: 4px;
+  transition: color 0.1s, background 0.1s;
+}
+
+.kanban-add-section:hover {
+  background: rgba(128, 128, 128, 0.08);
+  color: var(--text-primary, #e0e0e0);
+}
+
+/* active state for the ⊞ toggle button in MemoPane header */
+.memo-action-btn.active {
+  color: #4a9eff;
+}
+

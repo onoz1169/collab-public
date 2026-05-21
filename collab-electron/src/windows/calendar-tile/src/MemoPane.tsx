@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import KanbanPane, { type KanbanData } from "./KanbanPane";
 
 interface Memo {
   id: string;
   name: string;
   content: string;
+  kanban?: KanbanData;
 }
 
 interface MemosData {
@@ -95,6 +97,46 @@ export default function MemoPane() {
     pendingDataRef.current = flushed;
     flushSave();
   }, [data, flushSave]);
+
+  const toggleKanban = useCallback(() => {
+    if (!data || !activeMemo) return;
+    const updated: MemosData = {
+      ...data,
+      memos: data.memos.map((m) => {
+        if (m.id !== activeMemo.id) return m;
+        if (m.kanban) {
+          // Switch back to free text — remove kanban field
+          const { kanban: _, ...rest } = m;
+          return rest as Memo;
+        }
+        // Switch to kanban — initialize with default sections
+        return {
+          ...m,
+          kanban: {
+            sections: [
+              { id: uid(), name: "案件", collapsed: false, tasks: [] },
+              { id: uid(), name: "個人", collapsed: false, tasks: [] },
+              { id: uid(), name: "その他", collapsed: false, tasks: [] },
+            ],
+          },
+        };
+      }),
+    };
+    setData(updated);
+    scheduleSave(updated);
+  }, [data, activeMemo, scheduleSave]);
+
+  const handleKanbanChange = useCallback((kanban: KanbanData) => {
+    if (!data || !activeMemo) return;
+    const updated: MemosData = {
+      ...data,
+      memos: data.memos.map((m) =>
+        m.id === activeMemo.id ? { ...m, kanban } : m
+      ),
+    };
+    setData(updated);
+    scheduleSave(updated);
+  }, [data, activeMemo, scheduleSave]);
 
   const addMemo = useCallback(() => {
     if (!data) return;
@@ -267,20 +309,29 @@ export default function MemoPane() {
         </div>
 
         <div className="memo-pane-header-actions">
+          <button
+            className={`memo-action-btn${activeMemo.kanban ? " active" : ""}`}
+            onClick={toggleKanban}
+            title={activeMemo.kanban ? "フリーテキストに戻す" : "カンバンモード"}
+          >⊞</button>
           <button className="memo-action-btn" onClick={addMemo} title="新しいメモ">+</button>
           <button className="memo-action-btn" onClick={copyContent} title="コピー">⎘</button>
         </div>
       </div>
 
-      <div
-        ref={editorRef}
-        className="memo-pane-editor"
-        contentEditable
-        suppressContentEditableWarning
-        onInput={handleInput}
-        onPaste={handlePaste}
-        data-placeholder="メモを入力..."
-      />
+      {activeMemo.kanban ? (
+        <KanbanPane kanban={activeMemo.kanban} onChange={handleKanbanChange} />
+      ) : (
+        <div
+          ref={editorRef}
+          className="memo-pane-editor"
+          contentEditable
+          suppressContentEditableWarning
+          onInput={handleInput}
+          onPaste={handlePaste}
+          data-placeholder="メモを入力..."
+        />
+      )}
     </div>
   );
 }
