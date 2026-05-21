@@ -48,9 +48,11 @@ export default function KanbanPane({ kanban, onChange }: Props) {
   const [editingSection, setEditingSection] = useState<EditingSection | null>(null);
   const [taskTitleDraft, setTaskTitleDraft] = useState("");
   const [sectionNameDraft, setSectionNameDraft] = useState("");
+  const [overSectionId, setOverSectionId] = useState<string | null>(null);
 
   const taskInputRef = useRef<HTMLInputElement>(null);
   const sectionInputRef = useRef<HTMLInputElement>(null);
+  const dragIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (editingTask) taskInputRef.current?.focus();
@@ -164,6 +166,17 @@ export default function KanbanPane({ kanban, onChange }: Props) {
     setSectionNameDraft(section.name);
   }, []);
 
+  const moveSection = useCallback((fromId: string, toId: string) => {
+    if (fromId === toId) return;
+    const sections = [...kanban.sections];
+    const fromIdx = sections.findIndex((s) => s.id === fromId);
+    const toIdx = sections.findIndex((s) => s.id === toId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const [moved] = sections.splice(fromIdx, 1);
+    sections.splice(toIdx, 0, moved);
+    onChange({ sections });
+  }, [kanban, onChange]);
+
   return (
     <div className="kanban-board">
       {kanban.sections.map((section) => {
@@ -173,8 +186,31 @@ export default function KanbanPane({ kanban, onChange }: Props) {
         const orderedTasks = [...activeTasks, ...doneTasks];
 
         return (
-          <div key={section.id} className="kanban-section">
+          <div
+            key={section.id}
+            className={`kanban-section${overSectionId === section.id ? " kanban-section-over" : ""}`}
+            onDragOver={(e) => { e.preventDefault(); setOverSectionId(section.id); }}
+            onDragLeave={() => setOverSectionId(null)}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (dragIdRef.current) moveSection(dragIdRef.current, section.id);
+              dragIdRef.current = null;
+              setOverSectionId(null);
+            }}
+          >
             <div className="kanban-section-header">
+              <span
+                className="kanban-section-drag"
+                draggable
+                onDragStart={(e) => {
+                  dragIdRef.current = section.id;
+                  e.dataTransfer.effectAllowed = "move";
+                }}
+                onDragEnd={() => {
+                  dragIdRef.current = null;
+                  setOverSectionId(null);
+                }}
+              >⠿</span>
               <button
                 className="kanban-section-chevron"
                 onClick={() => updateSection(section.id, { collapsed: !section.collapsed })}

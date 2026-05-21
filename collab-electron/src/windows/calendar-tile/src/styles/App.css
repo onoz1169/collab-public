@@ -904,3 +904,30 @@ html, body, #root {
   color: #4a9eff;
 }
 
+/* ── Section drag-and-drop ────────────────────────────────── */
+
+.kanban-section-drag {
+  cursor: grab;
+  color: var(--text-muted, #888);
+  font-size: 13px;
+  padding: 0 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  user-select: none;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.kanban-section-header:hover .kanban-section-drag {
+  opacity: 1;
+}
+
+.kanban-section-drag:active {
+  cursor: grabbing;
+}
+
+.kanban-section-over {
+  border-top: 2px solid #4a9eff;
+  border-radius: 2px;
+}
+
