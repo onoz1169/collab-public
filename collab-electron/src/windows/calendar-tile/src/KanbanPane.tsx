@@ -32,13 +32,6 @@ function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-const STATUS_ORDER: KanbanTask["status"][] = ["todo", "in-progress", "done"];
-
-function nextStatus(current: KanbanTask["status"]): KanbanTask["status"] {
-  const idx = STATUS_ORDER.indexOf(current);
-  return STATUS_ORDER[(idx + 1) % STATUS_ORDER.length];
-}
-
 function statusSymbol(status: KanbanTask["status"]): string {
   if (status === "todo") return "○";
   if (status === "in-progress") return "◉";
@@ -318,11 +311,7 @@ export default function KanbanPane({ kanban, onChange }: Props) {
           {kanban.sections.map((section, index) => {
             const activeTasks = section.tasks.filter((t) => !t.archived);
             const archivedTasks = section.tasks.filter((t) => t.archived);
-            const pendingCount = activeTasks.filter((t) => t.status !== "done").length;
-            const orderedActive = [
-              ...activeTasks.filter((t) => t.status !== "done"),
-              ...activeTasks.filter((t) => t.status === "done"),
-            ];
+            const pendingCount = activeTasks.length;
             const isBeingDragged = draggingSectionId === section.id;
             const showDropLine = isDragging && dragOverIndex === index && draggingSectionId !== section.id;
 
@@ -384,7 +373,7 @@ export default function KanbanPane({ kanban, onChange }: Props) {
 
                   {!section.collapsed && (
                     <div className="kanban-section-body">
-                      {orderedActive.map((task) => {
+                      {activeTasks.map((task) => {
                         const isEditing =
                           editingTask?.sectionId === section.id &&
                           editingTask.taskId === task.id;
@@ -392,15 +381,15 @@ export default function KanbanPane({ kanban, onChange }: Props) {
                         return (
                           <div
                             key={task.id}
-                            className={`kanban-task${task.status === "done" ? " kanban-task-done" : ""}`}
+                            className="kanban-task"
                           >
                             <button
                               className={`kanban-task-status task-status-${task.status}`}
+                              title="クリックで完了・アーカイブ"
                               onClick={() => {
-                                const next = nextStatus(task.status);
                                 updateTask(section.id, task.id, {
-                                  status: next,
-                                  ...(next === "done" ? { archived: true } : {}),
+                                  status: "done",
+                                  archived: true,
                                 });
                               }}
                             >
