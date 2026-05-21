@@ -931,3 +931,200 @@ html, body, #root {
   border-radius: 2px;
 }
 
+/* ── Task Detail Panel ────────────────────────────────────── */
+
+.task-detail {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.task-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+  flex-shrink: 0;
+}
+
+.task-detail-back {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.task-detail-back:hover {
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--text-primary, #e0e0e0);
+}
+
+.task-detail-section-label {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  flex: 1;
+}
+
+.task-detail-archive-btn {
+  background: none;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: inherit;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.task-detail-archive-btn:hover {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+  border-color: #4caf50;
+}
+
+.task-detail-body {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.task-detail-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.task-detail-status-btn {
+  font-size: 16px !important;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.task-detail-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #e0e0e0);
+  outline: none;
+  flex: 1;
+  line-height: 1.4;
+  min-height: 28px;
+  word-break: break-word;
+}
+
+.task-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.task-detail-meta-label {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+}
+
+.task-detail-meta-sep {
+  width: 1px;
+  height: 12px;
+  background: rgba(128, 128, 128, 0.25);
+}
+
+.task-detail-due-input {
+  background: none;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: 4px;
+  color: var(--text-primary, #e0e0e0);
+  font-size: 12px;
+  padding: 2px 6px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.task-detail-due-input:focus {
+  outline: none;
+  border-color: #4a9eff;
+}
+
+.task-detail-status-label {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--text-muted, #888);
+}
+
+.task-detail-status-label.task-status-in-progress {
+  color: #4a9eff;
+  background: rgba(74, 158, 255, 0.1);
+}
+
+.task-detail-status-label.task-status-done {
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.task-detail-divider {
+  height: 1px;
+  background: rgba(128, 128, 128, 0.15);
+}
+
+.task-detail-notes {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary, #e0e0e0);
+  outline: none;
+  line-height: 1.7;
+  min-height: 160px;
+}
+
+.task-detail-notes:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted, #888);
+  pointer-events: none;
+}
+
+/* ── Archived tasks ───────────────────────────────────────── */
+
+.kanban-archived-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  border-radius: 4px;
+  margin-top: 4px;
+  user-select: none;
+}
+
+.kanban-archived-toggle:hover {
+  background: rgba(128, 128, 128, 0.08);
+}
+
+.kanban-task-archived .kanban-task-title {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.kanban-task-title-link {
+  cursor: pointer;
+}
+
+.kanban-task-title-link:hover {
+  text-decoration: underline;
+  text-decoration-color: rgba(128, 128, 128, 0.4);
+}
+
