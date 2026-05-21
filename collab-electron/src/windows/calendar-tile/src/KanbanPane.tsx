@@ -45,19 +45,27 @@ function statusSymbol(status: KanbanTask["status"]): string {
   return "✓";
 }
 
+interface DragState {
+  sectionId: string;
+  startIndex: number;
+  pointerId: number;
+}
+
 export default function KanbanPane({ kanban, onChange }: Props) {
   const [captureText, setCaptureText] = useState("");
   const [editingTask, setEditingTask] = useState<{ sectionId: string; taskId: string } | null>(null);
   const [editingSection, setEditingSection] = useState<{ sectionId: string } | null>(null);
   const [taskTitleDraft, setTaskTitleDraft] = useState("");
   const [sectionNameDraft, setSectionNameDraft] = useState("");
-  const [overSectionId, setOverSectionId] = useState<string | null>(null);
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState<Record<string, boolean>>({});
+  const [draggingSectionId, setDraggingSectionId] = useState<string | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const taskInputRef = useRef<HTMLInputElement>(null);
   const sectionInputRef = useRef<HTMLInputElement>(null);
-  const dragIdRef = useRef<string | null>(null);
+  const dragState = useRef<DragState | null>(null);
+  const sectionEls = useRef<Map<string, HTMLElement>>(new Map());
 
   useEffect(() => {
     if (editingTask) taskInputRef.current?.focus();
@@ -180,20 +188,70 @@ export default function KanbanPane({ kanban, onChange }: Props) {
     setSectionNameDraft(section.name);
   }, []);
 
-  const moveSection = useCallback((fromId: string, toId: string) => {
-    if (fromId === toId) return;
-    const sections = [...kanban.sections];
-    const fromIdx = sections.findIndex((s) => s.id === fromId);
-    const toIdx = sections.findIndex((s) => s.id === toId);
-    if (fromIdx === -1 || toIdx === -1) return;
-    const [moved] = sections.splice(fromIdx, 1);
-    sections.splice(toIdx, 0, moved);
-    onChange({ sections });
-  }, [kanban, onChange]);
-
   const toggleArchived = useCallback((sectionId: string) => {
     setShowArchived((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
   }, []);
+
+  // ── Pointer-based drag ──────────────────────────────────────
+
+  const calcOverIndex = useCallback((clientY: number): number => {
+    const sections = kanban.sections;
+    for (let i = 0; i < sections.length; i++) {
+      const id = sections[i]?.id;
+      if (!id) continue;
+      const el = sectionEls.current.get(id);
+      if (!el) continue;
+      const rect = el.getBoundingClientRect();
+      if (clientY < rect.top + rect.height / 2) return i;
+    }
+    return sections.length;
+  }, [kanban.sections]);
+
+  const handleDragHandlePointerDown = useCallback(
+    (e: React.PointerEvent, sectionId: string) => {
+      e.preventDefault();
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      const startIndex = kanban.sections.findIndex((s) => s.id === sectionId);
+      dragState.current = { sectionId, startIndex, pointerId: e.pointerId };
+      setDraggingSectionId(sectionId);
+      setDragOverIndex(startIndex);
+    },
+    [kanban.sections]
+  );
+
+  const handleBoardPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!dragState.current) return;
+      setDragOverIndex(calcOverIndex(e.clientY));
+    },
+    [calcOverIndex]
+  );
+
+  const handleBoardPointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      const ds = dragState.current;
+      if (!ds) return;
+      dragState.current = null;
+
+      const overIdx = calcOverIndex(e.clientY);
+      const { sectionId, startIndex } = ds;
+
+      // same position → no-op
+      if (overIdx !== startIndex && overIdx !== startIndex + 1) {
+        const sections = [...kanban.sections];
+        const [moved] = sections.splice(startIndex, 1);
+        const insertAt = overIdx > startIndex ? overIdx - 1 : overIdx;
+        sections.splice(insertAt, 0, moved);
+        onChange({ sections });
+      }
+
+      setDraggingSectionId(null);
+      setDragOverIndex(null);
+    },
+    [calcOverIndex, kanban.sections, onChange]
+  );
+
+  // ───────────────────────────────────────────────────────────
 
   const openTask = openTaskId
     ? kanban.sections.flatMap((s) => s.tasks).find((t) => t.id === openTaskId) ?? null
@@ -202,8 +260,14 @@ export default function KanbanPane({ kanban, onChange }: Props) {
     ? kanban.sections.find((s) => s.tasks.some((t) => t.id === openTaskId)) ?? null
     : null;
 
+  const isDragging = draggingSectionId !== null;
+
   return (
-    <div className="kanban-board">
+    <div
+      className={`kanban-board${isDragging ? " kanban-board-dragging" : ""}`}
+      onPointerMove={isDragging ? handleBoardPointerMove : undefined}
+      onPointerUp={isDragging ? handleBoardPointerUp : undefined}
+    >
       {openTask && openTaskSection ? (
         <TaskDetail
           task={openTask}
@@ -228,7 +292,6 @@ export default function KanbanPane({ kanban, onChange }: Props) {
                 if (e.key === "Enter") {
                   const title = captureText.trim();
                   if (title && kanban.sections.length > 0) {
-                    // firstSection is guaranteed to exist since we check length > 0
                     const newTask: KanbanTask = {
                       id: uid(),
                       title,
@@ -251,8 +314,8 @@ export default function KanbanPane({ kanban, onChange }: Props) {
             )}
           </div>
 
-          {/* sections */}
-          {kanban.sections.map((section) => {
+          {/* sections with drop lines */}
+          {kanban.sections.map((section, index) => {
             const activeTasks = section.tasks.filter((t) => !t.archived);
             const archivedTasks = section.tasks.filter((t) => t.archived);
             const pendingCount = activeTasks.filter((t) => t.status !== "done").length;
@@ -260,185 +323,178 @@ export default function KanbanPane({ kanban, onChange }: Props) {
               ...activeTasks.filter((t) => t.status !== "done"),
               ...activeTasks.filter((t) => t.status === "done"),
             ];
+            const isBeingDragged = draggingSectionId === section.id;
+            const showDropLine = isDragging && dragOverIndex === index && draggingSectionId !== section.id;
 
             return (
-              <div
-                key={section.id}
-                className={`kanban-section${overSectionId === section.id ? " kanban-section-over" : ""}`}
-                onDragOver={(e) => { e.preventDefault(); setOverSectionId(section.id); }}
-                onDragLeave={() => setOverSectionId(null)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  if (dragIdRef.current) moveSection(dragIdRef.current, section.id);
-                  dragIdRef.current = null;
-                  setOverSectionId(null);
-                }}
-              >
-                <div className="kanban-section-header">
-                  <span
-                    className="kanban-section-drag"
-                    draggable
-                    onDragStart={(e) => {
-                      dragIdRef.current = section.id;
-                      e.dataTransfer.effectAllowed = "move";
-                    }}
-                    onDragEnd={() => {
-                      dragIdRef.current = null;
-                      setOverSectionId(null);
-                    }}
-                  >⠿</span>
-                  <button
-                    className="kanban-section-chevron"
-                    onClick={() => updateSection(section.id, { collapsed: !section.collapsed })}
-                  >
-                    {section.collapsed ? "▸" : "▾"}
-                  </button>
-
-                  {editingSection?.sectionId === section.id ? (
-                    <input
-                      ref={sectionInputRef}
-                      className="kanban-section-name"
-                      value={sectionNameDraft}
-                      onChange={(e) => setSectionNameDraft(e.target.value)}
-                      onBlur={() => commitSectionName(section.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") e.currentTarget.blur();
-                        if (e.key === "Escape") {
-                          setSectionNameDraft(section.name);
-                          setEditingSection(null);
-                        }
-                      }}
-                    />
-                  ) : (
+              <div key={section.id}>
+                {showDropLine && <div className="kanban-drop-line" />}
+                <div
+                  ref={(el) => {
+                    if (el) sectionEls.current.set(section.id, el);
+                    else sectionEls.current.delete(section.id);
+                  }}
+                  className={`kanban-section${isBeingDragged ? " kanban-section-dragging" : ""}`}
+                >
+                  <div className="kanban-section-header">
                     <span
-                      className="kanban-section-name"
-                      onClick={() => startEditSection(section)}
+                      className="kanban-section-drag"
+                      onPointerDown={(e) => handleDragHandlePointerDown(e, section.id)}
+                    >⠿</span>
+                    <button
+                      className="kanban-section-chevron"
+                      onClick={() => updateSection(section.id, { collapsed: !section.collapsed })}
                     >
-                      {section.name || "無題のセクション"}
-                    </span>
-                  )}
+                      {section.collapsed ? "▸" : "▾"}
+                    </button>
 
-                  {section.collapsed && pendingCount > 0 && (
-                    <span className="kanban-section-badge">({pendingCount})</span>
-                  )}
-
-                  <button
-                    className="kanban-section-add-task"
-                    onClick={() => addTask(section.id)}
-                  >+</button>
-                </div>
-
-                {!section.collapsed && (
-                  <div className="kanban-section-body">
-                    {orderedActive.map((task) => {
-                      const isEditing =
-                        editingTask?.sectionId === section.id &&
-                        editingTask.taskId === task.id;
-
-                      return (
-                        <div
-                          key={task.id}
-                          className={`kanban-task${task.status === "done" ? " kanban-task-done" : ""}`}
-                        >
-                          <button
-                            className={`kanban-task-status task-status-${task.status}`}
-                            onClick={() => {
-                              const next = nextStatus(task.status);
-                              updateTask(section.id, task.id, {
-                                status: next,
-                                ...(next === "done" ? { archived: true } : {}),
-                              });
-                            }}
-                          >
-                            {statusSymbol(task.status)}
-                          </button>
-
-                          {isEditing ? (
-                            <input
-                              ref={taskInputRef}
-                              className="kanban-task-title"
-                              value={taskTitleDraft}
-                              onChange={(e) => setTaskTitleDraft(e.target.value)}
-                              onBlur={() => commitTaskTitle(section.id, task.id)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  // commit this task then add a new one in the same section
-                                  const title = taskTitleDraft.trim();
-                                  if (title) {
-                                    updateTask(section.id, task.id, { title });
-                                  } else {
-                                    deleteTask(section.id, task.id);
-                                  }
-                                  setEditingTask(null);
-                                  if (title) {
-                                    // add next task after a tick so state settles
-                                    setTimeout(() => addTask(section.id), 0);
-                                  }
-                                }
-                                if (e.key === "Escape") {
-                                  if (!task.title) deleteTask(section.id, task.id);
-                                  setEditingTask(null);
-                                }
-                              }}
-                            />
-                          ) : (
-                            <span
-                              className="kanban-task-title kanban-task-title-link"
-                              onClick={() => setOpenTaskId(task.id)}
-                            >
-                              {task.title}
-                            </span>
-                          )}
-
-                          {(() => {
-                            const due = formatDueDate(task.dueDate);
-                            return due ? <span className={`kanban-task-due ${due.cls}`}>{due.text}</span> : null;
-                          })()}
-
-                          <button
-                            className="kanban-task-delete"
-                            onClick={() => deleteTask(section.id, task.id)}
-                          >×</button>
-                        </div>
-                      );
-                    })}
-
-                    {archivedTasks.length > 0 && (
-                      <div
-                        className="kanban-archived-toggle"
-                        onClick={() => toggleArchived(section.id)}
+                    {editingSection?.sectionId === section.id ? (
+                      <input
+                        ref={sectionInputRef}
+                        className="kanban-section-name"
+                        value={sectionNameDraft}
+                        onChange={(e) => setSectionNameDraft(e.target.value)}
+                        onBlur={() => commitSectionName(section.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") e.currentTarget.blur();
+                          if (e.key === "Escape") {
+                            setSectionNameDraft(section.name);
+                            setEditingSection(null);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <span
+                        className="kanban-section-name"
+                        onClick={() => startEditSection(section)}
                       >
-                        {showArchived[section.id] ? "▾" : "▸"} アーカイブ済み ({archivedTasks.length})
-                      </div>
+                        {section.name || "無題のセクション"}
+                      </span>
                     )}
 
-                    {showArchived[section.id] && archivedTasks.map((task) => (
-                      <div key={task.id} className="kanban-task kanban-task-archived">
-                        <button
-                          className="kanban-task-status task-status-done"
-                          onClick={() => updateTask(section.id, task.id, { status: "todo", archived: false })}
-                          title="アーカイブを解除"
-                        >✓</button>
-                        <span
-                          className="kanban-task-title kanban-task-title-link"
-                          onClick={() => setOpenTaskId(task.id)}
-                        >
-                          {task.title}
-                        </span>
-                      </div>
-                    ))}
+                    {section.collapsed && pendingCount > 0 && (
+                      <span className="kanban-section-badge">({pendingCount})</span>
+                    )}
 
-                    <div
-                      className="kanban-add-task-row"
+                    <button
+                      className="kanban-section-add-task"
                       onClick={() => addTask(section.id)}
-                    >
-                      + タスクを追加
-                    </div>
+                    >+</button>
                   </div>
-                )}
+
+                  {!section.collapsed && (
+                    <div className="kanban-section-body">
+                      {orderedActive.map((task) => {
+                        const isEditing =
+                          editingTask?.sectionId === section.id &&
+                          editingTask.taskId === task.id;
+
+                        return (
+                          <div
+                            key={task.id}
+                            className={`kanban-task${task.status === "done" ? " kanban-task-done" : ""}`}
+                          >
+                            <button
+                              className={`kanban-task-status task-status-${task.status}`}
+                              onClick={() => {
+                                const next = nextStatus(task.status);
+                                updateTask(section.id, task.id, {
+                                  status: next,
+                                  ...(next === "done" ? { archived: true } : {}),
+                                });
+                              }}
+                            >
+                              {statusSymbol(task.status)}
+                            </button>
+
+                            {isEditing ? (
+                              <input
+                                ref={taskInputRef}
+                                className="kanban-task-title"
+                                value={taskTitleDraft}
+                                onChange={(e) => setTaskTitleDraft(e.target.value)}
+                                onBlur={() => commitTaskTitle(section.id, task.id)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    const title = taskTitleDraft.trim();
+                                    if (title) {
+                                      updateTask(section.id, task.id, { title });
+                                    } else {
+                                      deleteTask(section.id, task.id);
+                                    }
+                                    setEditingTask(null);
+                                    if (title) setTimeout(() => addTask(section.id), 0);
+                                  }
+                                  if (e.key === "Escape") {
+                                    if (!task.title) deleteTask(section.id, task.id);
+                                    setEditingTask(null);
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <span
+                                className="kanban-task-title kanban-task-title-link"
+                                onClick={() => setOpenTaskId(task.id)}
+                              >
+                                {task.title}
+                              </span>
+                            )}
+
+                            {(() => {
+                              const due = formatDueDate(task.dueDate);
+                              return due ? <span className={`kanban-task-due ${due.cls}`}>{due.text}</span> : null;
+                            })()}
+
+                            <button
+                              className="kanban-task-delete"
+                              onClick={() => deleteTask(section.id, task.id)}
+                            >×</button>
+                          </div>
+                        );
+                      })}
+
+                      {archivedTasks.length > 0 && (
+                        <div
+                          className="kanban-archived-toggle"
+                          onClick={() => toggleArchived(section.id)}
+                        >
+                          {showArchived[section.id] ? "▾" : "▸"} アーカイブ済み ({archivedTasks.length})
+                        </div>
+                      )}
+
+                      {showArchived[section.id] && archivedTasks.map((task) => (
+                        <div key={task.id} className="kanban-task kanban-task-archived">
+                          <button
+                            className="kanban-task-status task-status-done"
+                            onClick={() => updateTask(section.id, task.id, { status: "todo", archived: false })}
+                            title="アーカイブを解除"
+                          >✓</button>
+                          <span
+                            className="kanban-task-title kanban-task-title-link"
+                            onClick={() => setOpenTaskId(task.id)}
+                          >
+                            {task.title}
+                          </span>
+                        </div>
+                      ))}
+
+                      <div
+                        className="kanban-add-task-row"
+                        onClick={() => addTask(section.id)}
+                      >
+                        + タスクを追加
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
+
+          {/* drop line at end */}
+          {isDragging && dragOverIndex === kanban.sections.length && (
+            <div className="kanban-drop-line" />
+          )}
 
           <button className="kanban-add-section" onClick={addSection}>
             + セクションを追加

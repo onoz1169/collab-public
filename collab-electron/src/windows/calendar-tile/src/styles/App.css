@@ -916,6 +916,7 @@ html, body, #root {
   user-select: none;
   flex-shrink: 0;
   line-height: 1;
+  touch-action: none;
 }
 
 .kanban-section-header:hover .kanban-section-drag {
@@ -926,9 +927,26 @@ html, body, #root {
   cursor: grabbing;
 }
 
-.kanban-section-over {
-  border-top: 2px solid #4a9eff;
+.kanban-section-dragging {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.kanban-board-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.kanban-board-dragging * {
+  cursor: grabbing !important;
+}
+
+.kanban-drop-line {
+  height: 2px;
+  background: #4a9eff;
   border-radius: 2px;
+  margin: 2px 4px;
+  pointer-events: none;
 }
 
 /* ── Task Detail Panel ────────────────────────────────────── */
