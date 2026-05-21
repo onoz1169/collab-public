@@ -1,23 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import KanbanPane, { type KanbanData } from "./KanbanPane";
+import KanbanPane, { type KanbanData, ensureKanbanData } from "./KanbanPane";
 
 interface KanbanStore {
-  version: 2;
+  version: 3;
   kanban: KanbanData;
-}
-
-function migrate(raw: unknown): KanbanData {
-  if (raw && typeof raw === "object") {
-    const r = raw as Record<string, unknown>;
-    if (r["version"] === 2 && r["kanban"]) return r["kanban"] as KanbanData;
-    if (r["version"] === 1 && Array.isArray(r["memos"])) {
-      const memos = r["memos"] as Array<{ kanban?: KanbanData }>;
-      for (const m of memos) {
-        if (m.kanban) return m.kanban;
-      }
-    }
-  }
-  return { tasks: [], tags: [] };
 }
 
 export default function MemoPane() {
@@ -25,13 +11,13 @@ export default function MemoPane() {
 
   useEffect(() => {
     window.api.memosLoad()
-      .then((raw) => setKanban(migrate(raw)))
-      .catch(() => setKanban({ tasks: [], tags: [] }));
+      .then((raw) => setKanban(ensureKanbanData(raw)))
+      .catch(() => setKanban({ projects: [] }));
   }, []);
 
   const handleChange = useCallback((data: KanbanData) => {
     setKanban(data);
-    const store: KanbanStore = { version: 2, kanban: data };
+    const store: KanbanStore = { version: 3, kanban: data };
     window.api.memosSave(store).catch(() => {});
   }, []);
 

@@ -1251,6 +1251,391 @@ html, body, #root {
   opacity: 0.8;
 }
 
+/* ── Project cards (board view) ──────────────────────────── */
+
+.project-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  user-select: none;
+}
+
+.project-card:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.project-card-dragging {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.project-card-archived {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.project-card-archived:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.project-card-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #e0e0e0);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-card-meta {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.project-card-drag {
+  font-size: 14px;
+  color: var(--text-muted, #888);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.15s;
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+.project-card:hover .project-card-drag { opacity: 1; }
+.project-card-drag:active { cursor: grabbing; }
+
+.project-card-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 2px;
+  border-radius: 3px;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity 0.1s;
+  line-height: 1;
+}
+
+.project-card:hover .project-card-delete { opacity: 1; }
+.project-card-delete:hover { color: #ff6b6b; }
+
+.project-card-restore {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 3px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.project-card-restore:hover { color: var(--text-primary, #e0e0e0); }
+
+/* ── Project detail view ──────────────────────────────────── */
+
+.project-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.project-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+  flex-shrink: 0;
+}
+
+.project-detail-back {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: background 0.1s, color 0.1s;
+}
+
+.project-detail-back:hover {
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--text-primary, #e0e0e0);
+}
+
+.project-detail-name {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary, #e0e0e0);
+  outline: none;
+  min-height: 22px;
+  word-break: break-word;
+}
+
+.project-detail-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: background 0.1s;
+}
+
+.project-status-doing   { color: #4a9eff; border-color: rgba(74,158,255,0.4); background: rgba(74,158,255,0.08); }
+.project-status-waiting { color: #ff9f43; border-color: rgba(255,159,67,0.4); background: rgba(255,159,67,0.08); }
+.project-status-todo    { color: var(--text-muted, #888); border-color: rgba(128,128,128,0.25); background: transparent; }
+.project-status-done    { color: #4caf50; border-color: rgba(76,175,80,0.4); background: rgba(76,175,80,0.08); }
+
+.project-detail-archive-btn {
+  background: none;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.project-detail-archive-btn:hover {
+  background: rgba(76, 175, 80, 0.08);
+  color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.4);
+}
+
+.project-detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-detail-body::-webkit-scrollbar { width: 4px; }
+.project-detail-body::-webkit-scrollbar-track { background: transparent; }
+.project-detail-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+/* ── Project context notes (history/context field) ───────── */
+
+.project-context-notes {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  outline: none;
+  line-height: 1.7;
+  min-height: 48px;
+  padding: 4px 2px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.project-context-notes:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted, #888);
+  pointer-events: none;
+}
+
+.project-detail-divider {
+  height: 1px;
+  background: rgba(128, 128, 128, 0.12);
+  margin: 4px 0;
+}
+
+.project-task-has-notes {
+  color: #4a9eff;
+  font-size: 14px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* ── Add task input ───────────────────────────────────────── */
+
+.project-add-task {
+  margin-bottom: 6px;
+}
+
+.project-add-task-input {
+  width: 100%;
+  background: rgba(128, 128, 128, 0.06);
+  border: 1px solid rgba(128, 128, 128, 0.12);
+  border-radius: 6px;
+  color: var(--text-primary, #e0e0e0);
+  font-size: 12px;
+  padding: 6px 10px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.project-add-task-input::placeholder { color: var(--text-muted, #888); }
+.project-add-task-input:focus {
+  border-color: rgba(74, 158, 255, 0.4);
+  background: rgba(74, 158, 255, 0.04);
+}
+
+/* ── Task rows ────────────────────────────────────────────── */
+
+.project-task {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px;
+  border-radius: 4px;
+  min-height: 28px;
+}
+
+.project-task:hover { background: rgba(128, 128, 128, 0.07); }
+
+.project-task-check {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.1s;
+}
+
+.project-task-done .project-task-check { color: #4caf50; }
+.project-task-check:hover { opacity: 0.7; }
+
+.project-task-title {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary, #e0e0e0);
+  cursor: default;
+  min-width: 0;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.project-task-done .project-task-title {
+  text-decoration: line-through;
+  opacity: 0.4;
+}
+
+.project-task-title-input {
+  flex: 1;
+  background: rgba(128, 128, 128, 0.1);
+  border: 1px solid rgba(74, 158, 255, 0.4);
+  border-radius: 3px;
+  color: var(--text-primary, #e0e0e0);
+  font-size: 13px;
+  padding: 1px 5px;
+  outline: none;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.project-task-due {
+  font-size: 11px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.project-task-due-input {
+  background: none;
+  border: 1px solid rgba(74, 158, 255, 0.4);
+  border-radius: 4px;
+  color: var(--text-primary, #e0e0e0);
+  font-size: 11px;
+  padding: 1px 4px;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  outline: none;
+}
+
+.project-task-add-due {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity 0.1s;
+  font-family: inherit;
+}
+
+.project-task:hover .project-task-add-due { opacity: 0.6; }
+.project-task-add-due:hover { opacity: 1 !important; color: var(--text-primary, #e0e0e0); }
+
+.project-task-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+  border-radius: 3px;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity 0.1s;
+  line-height: 1;
+}
+
+.project-task:hover .project-task-delete { opacity: 1; }
+.project-task-delete:hover { color: #ff6b6b; }
+
+/* ── Done tasks section ───────────────────────────────────── */
+
+.project-done-section {
+  margin-top: 8px;
+  border-top: 1px solid rgba(128, 128, 128, 0.1);
+  padding-top: 4px;
+}
+
+.project-done-toggle {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  padding: 4px 4px;
+  border-radius: 4px;
+  user-select: none;
+}
+
+.project-done-toggle:hover { background: rgba(128, 128, 128, 0.07); }
+
+.project-empty {
+  font-size: 12px;
+  color: var(--text-muted, #888);
+  padding: 12px 4px;
+  opacity: 0.6;
+  text-align: center;
+}
+
 /* ── Status-based sections ────────────────────────────────── */
 
 .kanban-status-section {
@@ -1276,6 +1661,7 @@ html, body, #root {
 .kanban-status-doing  { color: #4a9eff; }
 .kanban-status-waiting { color: #ff9f43; }
 .kanban-status-todo   { color: var(--text-muted, #888); }
+.kanban-status-done   { color: #4caf50; }
 
 .kanban-section-count {
   font-size: 10px;
@@ -1434,3 +1820,149 @@ html, body, #root {
   background: rgba(128, 128, 128, 0.1);
 }
 
+/* ── Task Page ───────────────────────────────────────────── */
+
+.task-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.task-page-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+  flex-shrink: 0;
+}
+
+.task-page-back {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: background 0.1s, color 0.1s;
+}
+
+.task-page-back:hover {
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--text-primary, #e0e0e0);
+}
+
+.task-page-project-label {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-page-done-btn {
+  background: none;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.task-page-done-btn:hover {
+  background: rgba(76, 175, 80, 0.08);
+  color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.4);
+}
+
+.task-page-done-btn-done {
+  color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.4);
+  background: rgba(76, 175, 80, 0.08);
+}
+
+.task-page-body {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.task-page-body::-webkit-scrollbar { width: 4px; }
+.task-page-body::-webkit-scrollbar-track { background: transparent; }
+.task-page-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+.task-page-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary, #e0e0e0);
+  outline: none;
+  min-height: 26px;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.task-page-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.task-page-due-input {
+  background: none;
+  border: 1px solid rgba(74, 158, 255, 0.4);
+  border-radius: 4px;
+  color: var(--text-primary, #e0e0e0);
+  font-size: 11px;
+  padding: 2px 6px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+.task-page-status-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--text-muted, #888);
+}
+
+.task-page-status-done {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.task-page-divider {
+  height: 1px;
+  background: rgba(128, 128, 128, 0.15);
+  flex-shrink: 0;
+}
+
+.task-page-notes {
+  flex: 1;
+  font-size: 13px;
+  outline: none;
+  min-height: 120px;
+  line-height: 1.7;
+  color: var(--text-primary, #e0e0e0);
+  word-break: break-word;
+}
+
+.task-page-notes:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted, #888);
+  pointer-events: none;
+}
