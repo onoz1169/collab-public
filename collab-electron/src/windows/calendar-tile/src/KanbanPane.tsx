@@ -33,9 +33,9 @@ function uid() {
 }
 
 function statusSymbol(status: KanbanTask["status"]): string {
-  if (status === "todo") return "○";
-  if (status === "in-progress") return "◉";
-  return "✓";
+  if (status === "todo") return "□";
+  if (status === "in-progress") return "▣";
+  return "☑";
 }
 
 interface DragState {
@@ -457,7 +457,7 @@ export default function KanbanPane({ kanban, onChange }: Props) {
                             className="kanban-task-status task-status-done"
                             onClick={() => updateTask(section.id, task.id, { status: "todo", archived: false })}
                             title="アーカイブを解除"
-                          >✓</button>
+                          >☑</button>
                           <span
                             className="kanban-task-title kanban-task-title-link"
                             onClick={() => setOpenTaskId(task.id)}

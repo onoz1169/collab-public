@@ -768,11 +768,11 @@ html, body, #root {
   padding: 0;
   cursor: pointer;
   flex-shrink: 0;
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1;
   color: var(--text-muted, #888);
   transition: color 0.1s;
-  margin-top: 1px;
+  margin-top: 0;
 }
 
 .kanban-task-status.task-status-todo {
@@ -1025,8 +1025,8 @@ html, body, #root {
 }
 
 .task-detail-status-btn {
-  font-size: 16px !important;
-  margin-top: 3px;
+  font-size: 20px !important;
+  margin-top: 2px;
   flex-shrink: 0;
 }
 

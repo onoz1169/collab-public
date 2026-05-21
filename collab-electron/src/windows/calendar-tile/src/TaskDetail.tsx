@@ -23,9 +23,9 @@ function nextStatus(s: KanbanTask["status"]): KanbanTask["status"] {
 }
 
 function statusSymbol(status: KanbanTask["status"]): string {
-  if (status === "todo") return "○";
-  if (status === "in-progress") return "◉";
-  return "✓";
+  if (status === "todo") return "□";
+  if (status === "in-progress") return "▣";
+  return "☑";
 }
 
 export default function TaskDetail({ task, sectionName, onBack, onUpdate, onArchive }: Props) {
