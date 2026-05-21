@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import TaskDetail from "./TaskDetail";
+import { formatDueDate } from "./dateUtils";
 
 export interface KanbanTask {
   id: string;
@@ -45,6 +46,7 @@ function statusSymbol(status: KanbanTask["status"]): string {
 }
 
 export default function KanbanPane({ kanban, onChange }: Props) {
+  const [captureText, setCaptureText] = useState("");
   const [editingTask, setEditingTask] = useState<{ sectionId: string; taskId: string } | null>(null);
   const [editingSection, setEditingSection] = useState<{ sectionId: string } | null>(null);
   const [taskTitleDraft, setTaskTitleDraft] = useState("");
@@ -64,6 +66,15 @@ export default function KanbanPane({ kanban, onChange }: Props) {
   useEffect(() => {
     if (editingSection) sectionInputRef.current?.focus();
   }, [editingSection]);
+
+  useEffect(() => {
+    if (!openTaskId) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenTaskId(null);
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [openTaskId]);
 
   const updateSection = useCallback(
     (sectionId: string, patch: Partial<KanbanSection>) => {
@@ -206,6 +217,41 @@ export default function KanbanPane({ kanban, onChange }: Props) {
         />
       ) : (
         <>
+          {/* quick capture */}
+          <div className="kanban-capture">
+            <input
+              className="kanban-capture-input"
+              placeholder="タスクを追加... (Enter で先頭セクションへ)"
+              value={captureText}
+              onChange={(e) => setCaptureText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const title = captureText.trim();
+                  if (title && kanban.sections.length > 0) {
+                    // firstSection is guaranteed to exist since we check length > 0
+                    const newTask: KanbanTask = {
+                      id: uid(),
+                      title,
+                      status: "todo",
+                      createdAt: new Date().toISOString(),
+                    };
+                    onChange({
+                      sections: kanban.sections.map((s, i) =>
+                        i === 0 ? { ...s, collapsed: false, tasks: [...s.tasks, newTask] } : s
+                      ),
+                    });
+                    setCaptureText("");
+                  }
+                }
+                if (e.key === "Escape") setCaptureText("");
+              }}
+            />
+            {kanban.sections.length > 0 && captureText && (
+              <span className="kanban-capture-hint">→ {kanban.sections[0]?.name || "先頭セクション"}</span>
+            )}
+          </div>
+
+          {/* sections */}
           {kanban.sections.map((section) => {
             const activeTasks = section.tasks.filter((t) => !t.archived);
             const archivedTasks = section.tasks.filter((t) => t.archived);
@@ -315,7 +361,20 @@ export default function KanbanPane({ kanban, onChange }: Props) {
                               onChange={(e) => setTaskTitleDraft(e.target.value)}
                               onBlur={() => commitTaskTitle(section.id, task.id)}
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") e.currentTarget.blur();
+                                if (e.key === "Enter") {
+                                  // commit this task then add a new one in the same section
+                                  const title = taskTitleDraft.trim();
+                                  if (title) {
+                                    updateTask(section.id, task.id, { title });
+                                  } else {
+                                    deleteTask(section.id, task.id);
+                                  }
+                                  setEditingTask(null);
+                                  if (title) {
+                                    // add next task after a tick so state settles
+                                    setTimeout(() => addTask(section.id), 0);
+                                  }
+                                }
                                 if (e.key === "Escape") {
                                   if (!task.title) deleteTask(section.id, task.id);
                                   setEditingTask(null);
@@ -331,9 +390,10 @@ export default function KanbanPane({ kanban, onChange }: Props) {
                             </span>
                           )}
 
-                          {task.dueDate && (
-                            <span className="kanban-task-due">{task.dueDate}</span>
-                          )}
+                          {(() => {
+                            const due = formatDueDate(task.dueDate);
+                            return due ? <span className={`kanban-task-due ${due.cls}`}>{due.text}</span> : null;
+                          })()}
 
                           <button
                             className="kanban-task-delete"

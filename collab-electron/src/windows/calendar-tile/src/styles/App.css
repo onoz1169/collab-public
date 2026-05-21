@@ -1128,3 +1128,108 @@ html, body, #root {
   text-decoration-color: rgba(128, 128, 128, 0.4);
 }
 
+/* ── Quick capture bar ────────────────────────────────────── */
+
+.kanban-capture {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px 8px;
+  flex-shrink: 0;
+}
+
+.kanban-capture-input {
+  flex: 1;
+  background: rgba(128, 128, 128, 0.08);
+  border: 1px solid rgba(128, 128, 128, 0.15);
+  border-radius: 6px;
+  color: var(--text-primary, #e0e0e0);
+  font-size: 12px;
+  padding: 5px 10px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.kanban-capture-input::placeholder {
+  color: var(--text-muted, #888);
+}
+
+.kanban-capture-input:focus {
+  border-color: #4a9eff;
+  background: rgba(74, 158, 255, 0.05);
+}
+
+.kanban-capture-hint {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── In-progress task highlight ───────────────────────────── */
+
+.kanban-task:has(.task-status-in-progress) {
+  border-left: 2px solid #4a9eff;
+  padding-left: 2px;
+}
+
+/* ── Due date color coding ────────────────────────────────── */
+
+.due-overdue {
+  color: #ff6b6b !important;
+  font-weight: 600;
+}
+
+.due-today {
+  color: #ff9f43 !important;
+  font-weight: 600;
+}
+
+.due-soon {
+  color: #ffd93d !important;
+}
+
+.due-upcoming {
+  color: var(--text-muted, #888);
+}
+
+.due-normal {
+  color: var(--text-muted, #888);
+  font-size: 10px;
+}
+
+/* ── Due date badge in task detail ───────────────────────── */
+
+.task-detail-due-badge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.task-detail-due-badge.due-overdue {
+  background: rgba(255, 107, 107, 0.12);
+}
+
+.task-detail-due-badge.due-today {
+  background: rgba(255, 159, 67, 0.12);
+}
+
+.task-detail-due-badge.due-soon {
+  background: rgba(255, 217, 61, 0.1);
+}
+
+.task-detail-due-badge.due-upcoming,
+.task-detail-due-badge.due-normal {
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--text-muted, #888) !important;
+  font-weight: 400;
+}
+
+/* ── Task title link hover ────────────────────────────────── */
+
+.kanban-task-title-link:hover {
+  opacity: 0.8;
+}
+

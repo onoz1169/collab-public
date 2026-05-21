@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback } from "react";
 import type { KanbanTask } from "./KanbanPane";
+import { formatDueDate } from "./dateUtils";
 
 interface Props {
   task: KanbanTask;
@@ -30,11 +31,26 @@ function statusSymbol(status: KanbanTask["status"]): string {
 export default function TaskDetail({ task, sectionName, onBack, onUpdate, onArchive }: Props) {
   const titleRef = useRef<HTMLDivElement>(null);
   const notesRef = useRef<HTMLDivElement>(null);
+  const notesSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (titleRef.current) titleRef.current.textContent = task.title;
     if (notesRef.current) notesRef.current.innerHTML = task.notes ?? "";
   }, [task.id]);
+
+  useEffect(() => {
+    return () => {
+      if (notesSaveTimerRef.current) clearTimeout(notesSaveTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onBack();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onBack]);
 
   const saveTitle = useCallback(() => {
     const title = titleRef.current?.textContent?.trim() ?? "";
@@ -50,13 +66,21 @@ export default function TaskDetail({ task, sectionName, onBack, onUpdate, onArch
     onUpdate({ notes });
   }, [onUpdate]);
 
+  const handleNotesInput = useCallback(() => {
+    if (notesSaveTimerRef.current) clearTimeout(notesSaveTimerRef.current);
+    notesSaveTimerRef.current = setTimeout(() => {
+      const notes = notesRef.current?.innerHTML ?? "";
+      onUpdate({ notes });
+    }, 600);
+  }, [onUpdate]);
+
   return (
     <div className="task-detail">
       <div className="task-detail-header">
         <button className="task-detail-back" onClick={onBack}>← 戻る</button>
         <span className="task-detail-section-label">{sectionName}</span>
         <button className="task-detail-archive-btn" onClick={onArchive}>
-          完了・アーカイブ
+          完了・アーカイブ  ⌘↵
         </button>
       </div>
 
@@ -76,7 +100,8 @@ export default function TaskDetail({ task, sectionName, onBack, onUpdate, onArch
             suppressContentEditableWarning
             onBlur={saveTitle}
             onKeyDown={(e) => {
-              if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); }
+              if (e.key === "Enter" && !e.metaKey) { e.preventDefault(); e.currentTarget.blur(); }
+              if (e.key === "Enter" && e.metaKey) { e.preventDefault(); onArchive(); }
             }}
           />
         </div>
@@ -89,6 +114,10 @@ export default function TaskDetail({ task, sectionName, onBack, onUpdate, onArch
             value={task.dueDate ?? ""}
             onChange={(e) => onUpdate({ dueDate: e.target.value })}
           />
+          {(() => {
+            const due = formatDueDate(task.dueDate);
+            return due ? <span className={`task-detail-due-badge ${due.cls}`}>{due.text}</span> : null;
+          })()}
           <span className="task-detail-meta-sep" />
           <span className="task-detail-meta-label">ステータス</span>
           <span className={`task-detail-status-label task-status-${task.status}`}>
@@ -104,6 +133,7 @@ export default function TaskDetail({ task, sectionName, onBack, onUpdate, onArch
           contentEditable
           suppressContentEditableWarning
           onBlur={saveNotes}
+          onInput={handleNotesInput}
           data-placeholder="メモ、詳細情報を入力..."
         />
       </div>
