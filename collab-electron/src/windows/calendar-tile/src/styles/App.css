@@ -1253,38 +1253,163 @@ html, body, #root {
 
 /* ── Project cards (board view) ──────────────────────────── */
 
-.project-card {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+.project-card-wrap {
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.07);
   margin-bottom: 4px;
-  cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
-  user-select: none;
+  overflow: hidden;
+  transition: border-color 0.12s;
 }
+
+.project-card-wrap:hover { border-color: rgba(255, 255, 255, 0.14); }
+.project-card-wrap.project-card-dragging { opacity: 0.3; pointer-events: none; }
+
+.project-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background 0.12s;
+  user-select: none;
+  background: transparent;
+}
+
+.project-card:hover { background: rgba(255, 255, 255, 0.05); }
+
+.project-card-toggle {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  line-height: 1;
+  width: 12px;
+  text-align: center;
+  font-family: inherit;
+}
+
+.project-card-tasks {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 4px 10px 6px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.project-card-task-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  position: relative;
+}
+
+.project-card-task-check {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+  flex-shrink: 0;
+  line-height: 1;
+  font-family: inherit;
+  transition: color 0.1s;
+}
+
+.project-card-task-check:hover { color: #4caf50; }
+
+.project-card-task-title {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.1s;
+}
+
+.project-card-task-title:hover { color: var(--text-primary, #e0e0e0); }
+
+.project-card-task-due {
+  font-size: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+
+.project-card-task-detail {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 3px;
+  border-radius: 3px;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity 0.1s, color 0.1s;
+  line-height: 1;
+  font-family: inherit;
+}
+
+.project-card-task-row:hover .project-card-task-detail {
+  opacity: 1;
+}
+
+.project-card-task-detail:hover {
+  color: var(--text-primary, #e0e0e0);
+  background: rgba(128, 128, 128, 0.15);
+}
+
+.project-card-task-empty {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  padding: 2px 0;
+}
+
+.project-card-add-task-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px 0 2px;
+  text-align: left;
+  transition: color 0.1s;
+}
+
+.project-card-add-task-btn:hover { color: #4a9eff; }
+
+.project-card-detail-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0 3px;
+  border-radius: 3px;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity 0.1s, color 0.1s;
+  line-height: 1;
+  font-family: inherit;
+}
+
+.project-card:hover .project-card-detail-btn { opacity: 1; }
+.project-card-detail-btn:hover { color: var(--text-primary, #e0e0e0); }
 
 .project-card:hover {
   background: rgba(255, 255, 255, 0.09);
   border-color: rgba(255, 255, 255, 0.14);
 }
 
-.project-card-dragging {
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-.project-card-archived {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.project-card-archived:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
 
 .project-card-name {
   flex: 1;
@@ -1315,6 +1440,28 @@ html, body, #root {
 
 .project-card:hover .project-card-drag { opacity: 1; }
 .project-card-drag:active { cursor: grabbing; }
+
+.project-card-status-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: 10px;
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  transition: border-color 0.1s;
+  outline: none;
+}
+
+.project-card-status-select:hover { border-color: rgba(128, 128, 128, 0.4); }
+
+.project-card-status-select.project-status-doing   { color: #4a9eff; border-color: rgba(74,158,255,0.35); }
+.project-card-status-select.project-status-waiting { color: #ff9f43; border-color: rgba(255,159,67,0.35); }
+.project-card-status-select.project-status-todo    { color: var(--text-muted, #888); }
+.project-card-status-select.project-status-done    { color: #4caf50; border-color: rgba(76,175,80,0.35); }
 
 .project-card-delete {
   background: none;
@@ -1717,6 +1864,10 @@ html, body, #root {
   opacity: 0.5;
 }
 
+.kanban-section-drop-zone {
+  min-height: 40px;
+}
+
 /* ── Archived section wrapper ─────────────────────────────── */
 
 .kanban-archived-section {
@@ -1903,7 +2054,36 @@ html, body, #root {
 .task-page-body::-webkit-scrollbar-track { background: transparent; }
 .task-page-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
+.task-page-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.task-page-check {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--text-muted, #888);
+  transition: color 0.15s, transform 0.1s;
+}
+
+.task-page-check:hover {
+  color: #4caf50;
+  transform: scale(1.15);
+}
+
+.task-page-check-done {
+  color: #4caf50;
+}
+
 .task-page-title {
+  flex: 1;
   font-size: 18px;
   font-weight: 700;
   color: var(--text-primary, #e0e0e0);
@@ -1911,6 +2091,11 @@ html, body, #root {
   min-height: 26px;
   word-break: break-word;
   line-height: 1.4;
+}
+
+.task-page-title-done {
+  text-decoration: line-through;
+  color: var(--text-muted, #888);
 }
 
 .task-page-meta {
@@ -1965,4 +2150,181 @@ html, body, #root {
   content: attr(data-placeholder);
   color: var(--text-muted, #888);
   pointer-events: none;
+}
+
+/* ── DatePicker ───────────────────────────────────────────── */
+
+.datepicker-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.datepicker-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid rgba(74, 158, 255, 0.35);
+  border-radius: 5px;
+  color: rgba(74, 158, 255, 0.9);
+  font-size: 12px;
+  padding: 3px 8px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.datepicker-trigger:hover {
+  background: rgba(74, 158, 255, 0.08);
+  border-color: rgba(74, 158, 255, 0.6);
+}
+
+.datepicker-trigger-set {
+  color: var(--text-primary, #e0e0e0);
+  border-color: rgba(128, 128, 128, 0.3);
+}
+
+.datepicker-clear {
+  color: var(--text-muted, #888);
+  font-size: 11px;
+  margin-left: 2px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.datepicker-clear:hover { color: #ff6b6b; }
+
+.datepicker-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  background: #1e1e1e;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  min-width: 220px;
+}
+
+.datepicker-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.datepicker-nav button {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  transition: background 0.1s, color 0.1s;
+}
+
+.datepicker-nav button:hover {
+  background: rgba(128, 128, 128, 0.15);
+  color: var(--text-primary, #e0e0e0);
+}
+
+.datepicker-nav span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.datepicker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.datepicker-dow {
+  font-size: 10px;
+  color: var(--text-muted, #888);
+  text-align: center;
+  padding: 2px 0 4px;
+}
+
+.datepicker-day {
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-primary, #e0e0e0);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px 2px;
+  text-align: center;
+  transition: background 0.1s;
+}
+
+.datepicker-day:hover { background: rgba(128, 128, 128, 0.2); }
+
+.datepicker-today {
+  font-weight: 700;
+  color: #4a9eff;
+}
+
+.datepicker-selected {
+  background: #4a9eff !important;
+  color: #fff !important;
+  font-weight: 700;
+}
+
+.datepicker-sun { color: #ff6b6b; }
+.datepicker-sat { color: #4a9eff; }
+.datepicker-selected.datepicker-sun,
+.datepicker-selected.datepicker-sat { color: #fff; }
+
+.datepicker-footer {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(128, 128, 128, 0.15);
+}
+
+.datepicker-today-btn,
+.datepicker-tomorrow-btn {
+  flex: 1;
+  background: rgba(128, 128, 128, 0.1);
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: 4px;
+  color: var(--text-primary, #e0e0e0);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px;
+  transition: background 0.1s;
+}
+
+.datepicker-today-btn:hover,
+.datepicker-tomorrow-btn:hover { background: rgba(128, 128, 128, 0.2); }
+
+/* ── project-add-task-btn ──────────────────────────────────── */
+
+.project-add-task-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(74, 158, 255, 0.06);
+  border: 1px dashed rgba(74, 158, 255, 0.3);
+  border-radius: 6px;
+  color: rgba(74, 158, 255, 0.8);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.project-add-task-btn:hover {
+  background: rgba(74, 158, 255, 0.12);
+  border-color: rgba(74, 158, 255, 0.5);
+  color: #4a9eff;
 }

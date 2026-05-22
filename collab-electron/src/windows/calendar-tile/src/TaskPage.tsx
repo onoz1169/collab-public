@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import type { ProjectTask } from "./KanbanPane";
 import { formatDueDate } from "./dateUtils";
+import DatePicker from "./DatePicker";
 
 interface Props {
   task: ProjectTask;
@@ -46,40 +47,38 @@ export default function TaskPage({ task, projectName, onBack, onUpdate }: Props)
       <div className="task-page-header">
         <button className="task-page-back" onClick={onBack}>← 戻る</button>
         <span className="task-page-project-label">{projectName}</span>
-        <button
-          className={`task-page-done-btn${task.done ? " task-page-done-btn-done" : ""}`}
-          onClick={() => onUpdate({ done: !task.done })}
-        >
-          {task.done ? "完了済み" : "完了にする"}
-        </button>
       </div>
 
       <div className="task-page-body">
-        <div
-          ref={titleRef}
-          className="task-page-title"
-          contentEditable
-          suppressContentEditableWarning
-          onBlur={saveTitle}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); }
-            if (e.key === "Escape") { e.preventDefault(); onBack(); }
-          }}
-        />
+        <div className="task-page-title-row">
+          <button
+            className={`task-page-check${task.done ? " task-page-check-done" : ""}`}
+            onClick={() => { onUpdate({ done: !task.done }); onBack(); }}
+            title={task.done ? "完了済み（クリックで戻す）" : "完了にしてプロジェクトへ戻る"}
+          >
+            {task.done ? "☑" : "□"}
+          </button>
+          <div
+            ref={titleRef}
+            className={`task-page-title${task.done ? " task-page-title-done" : ""}`}
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={saveTitle}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); }
+              if (e.key === "Escape") { e.preventDefault(); onBack(); }
+            }}
+          />
+        </div>
 
         <div className="task-page-meta">
-          <input
-            className="task-page-due-input"
-            type="date"
-            value={task.dueDate ?? ""}
-            onChange={(e) => onUpdate({ dueDate: e.target.value || undefined })}
+          <DatePicker
+            value={task.dueDate}
+            onChange={(date) => onUpdate({ dueDate: date })}
           />
           {due && (
             <span className={`task-page-status-badge ${due.cls}`}>{due.text}</span>
           )}
-          <span className={`task-page-status-badge${task.done ? " task-page-status-done" : ""}`}>
-            {task.done ? "完了" : "未完了"}
-          </span>
         </div>
 
         <div className="task-page-divider" />

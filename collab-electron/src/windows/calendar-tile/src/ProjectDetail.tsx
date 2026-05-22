@@ -60,7 +60,6 @@ function TaskRow({ task, onOpen, onToggleDone, onDelete }: TaskRowProps) {
 }
 
 export default function ProjectDetail({ project, onBack, onOpenTask, onUpdate, onArchive }: Props) {
-  const [captureText, setCaptureText] = useState("");
   const [showDone, setShowDone] = useState(true);
   const nameRef = useRef<HTMLDivElement>(null);
   const notesRef = useRef<HTMLDivElement>(null);
@@ -110,15 +109,13 @@ export default function ProjectDetail({ project, onBack, onOpenTask, onUpdate, o
   }, [project.tasks, onUpdate]);
 
   const addTask = useCallback((title: string) => {
-    if (!title.trim()) return;
     const task: ProjectTask = {
       id: uid(),
-      title: title.trim(),
+      title,
       done: false,
       createdAt: new Date().toISOString(),
     };
     onUpdate({ tasks: [...project.tasks, task] });
-    // Open the new task immediately
     setTimeout(() => onOpenTask(task.id), 50);
   }, [project.tasks, onUpdate, onOpenTask]);
 
@@ -147,7 +144,7 @@ export default function ProjectDetail({ project, onBack, onOpenTask, onUpdate, o
         >
           {STATUS_LABELS[project.status]}
         </button>
-        <button className="project-detail-archive-btn" onClick={onArchive}>完了</button>
+        <button className="project-detail-archive-btn" onClick={onArchive} title="Done セクションへ移動">Done ✓</button>
       </div>
 
       <div className="project-detail-body">
@@ -165,18 +162,9 @@ export default function ProjectDetail({ project, onBack, onOpenTask, onUpdate, o
         <div className="project-detail-divider" />
 
         {/* Add task */}
-        <div className="project-add-task">
-          <input
-            className="project-add-task-input"
-            placeholder="タスクを追加... (Enter でタスクページへ)"
-            value={captureText}
-            onChange={(e) => setCaptureText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") { addTask(captureText); setCaptureText(""); }
-              if (e.key === "Escape") setCaptureText("");
-            }}
-          />
-        </div>
+        <button className="project-add-task-btn" onClick={() => addTask("新規タスク")}>
+          + タスクを追加
+        </button>
 
         {/* Active tasks */}
         {activeTasks.map((task) => (
