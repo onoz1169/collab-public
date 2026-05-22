@@ -65,8 +65,8 @@ export default function TaskPage({ task, projectName, onBack, onUpdate }: Props)
             suppressContentEditableWarning
             onBlur={saveTitle}
             onKeyDown={(e) => {
-              if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); }
-              if (e.key === "Escape") { e.preventDefault(); onBack(); }
+              if (e.key === "Enter" && !e.nativeEvent.isComposing) { e.preventDefault(); e.currentTarget.blur(); }
+              if (e.key === "Escape" && !e.nativeEvent.isComposing) { e.preventDefault(); onBack(); }
             }}
           />
         </div>

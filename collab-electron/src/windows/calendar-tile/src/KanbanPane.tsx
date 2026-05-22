@@ -186,6 +186,7 @@ export default function KanbanPane({ kanban: rawKanban, onChange }: Props) {
                           onClick={(e) => { e.stopPropagation(); toggleExpand(project.id); }}
                         >{isExpanded ? "▾" : "▸"}</button>
                         <div
+                          key={project.name}
                           className="project-card-name"
                           contentEditable
                           suppressContentEditableWarning
@@ -197,7 +198,7 @@ export default function KanbanPane({ kanban: rawKanban, onChange }: Props) {
                             else e.currentTarget.textContent = project.name;
                           }}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); }
+                            if (e.key === "Enter" && !e.nativeEvent.isComposing) { e.preventDefault(); e.currentTarget.blur(); }
                             if (e.key === "Escape") { e.currentTarget.textContent = project.name; e.currentTarget.blur(); }
                           }}
                         >{project.name}</div>
@@ -236,6 +237,7 @@ export default function KanbanPane({ kanban: rawKanban, onChange }: Props) {
                                   onClick={() => updateTask(project.id, task.id, { done: true })}
                                 >□</button>
                                 <div
+                                  key={task.title}
                                   className="project-card-task-title"
                                   contentEditable
                                   suppressContentEditableWarning
@@ -246,7 +248,7 @@ export default function KanbanPane({ kanban: rawKanban, onChange }: Props) {
                                     else e.currentTarget.textContent = task.title;
                                   }}
                                   onKeyDown={(e) => {
-                                    if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); }
+                                    if (e.key === "Enter" && !e.nativeEvent.isComposing) { e.preventDefault(); e.currentTarget.blur(); }
                                   }}
                                 >{task.title}</div>
                                 {due && <span className={`project-card-task-due ${due.cls}`}>{due.text}</span>}
